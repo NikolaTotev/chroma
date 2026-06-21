@@ -1,0 +1,26 @@
+[package]
+name = "chroma-capture-x11"
+description = "Chroma X11 capture backend: GetImage frames + XInput2 input events on a shared monotonic clock. Implements chroma-capture-api. Linux-only (a stub elsewhere)."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }
+chroma-capture-api = { workspace = true }
+
+# x11rb's pure-Rust connection needs no libxcb / system X headers, keeping the
+# backend's dependency surface minimal. Linux-only: on other targets the crate
+# compiles to a stub (see src/stub.rs) so the workspace still builds.
+[target.'cfg(target_os = "linux")'.dependencies]
+# "xinput" enables the XInput2 extension (raw input events); core GetImage is
+# always available.
+x11rb = { version = "0.13", features = ["xinput"] }
+
+# Integration tests create a server-backed pixmap to exercise the GetImage path
+# deterministically (the desktop root is not capturable under rootless Xwayland;
+# see DECISIONS.md).
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+x11rb = "0.13"

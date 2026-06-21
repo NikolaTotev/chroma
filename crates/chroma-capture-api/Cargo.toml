@@ -1,0 +1,12 @@
+[package]
+name = "chroma-capture-api"
+description = "Chroma capture contract: ScreenCapturer, EventSource, and Clock traits with their frame and input-event value types. No backend logic."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }
+serde = { workspace = true }

@@ -1,0 +1,33 @@
+# Chroma — Cargo workspace.
+#
+# Layout follows ORCHESTRATION.md §9: one crate per directory under `crates/`,
+# contract crates suffixed `-api` holding only traits + value types + fakes.
+#
+# chroma-capture-x11 is a member but compiles to a stub off Linux (its x11rb
+# dependency is target-gated), so the workspace builds on Windows and the real
+# backend builds on Linux/WSL. chroma-capture-wayland (M7) is still deferred.
+[workspace]
+resolver = "2"
+members = [
+    "crates/chroma-core-api",
+    "crates/chroma-capture-api",
+    "crates/chroma-media-api",
+    "crates/chroma-capture-x11",
+]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "MIT OR Apache-2.0"
+rust-version = "1.90"
+repository = "https://github.com/rilonic/chroma"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Internal contract crates, referenced by path so consumers depend on the
+# `-api` surface only (ORCHESTRATION.md §0 rule 2).
+chroma-core-api = { path = "crates/chroma-core-api", version = "0.1.0" }
+chroma-capture-api = { path = "crates/chroma-capture-api", version = "0.1.0" }
+chroma-media-api = { path = "crates/chroma-media-api", version = "0.1.0" }

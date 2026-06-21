@@ -1,0 +1,12 @@
+[package]
+name = "chroma-media-api"
+description = "Chroma media contract: Decoder, Encoder, FrameSource, and MuxTarget traits with codec/output parameter types. No FFmpeg logic."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }
+serde = { workspace = true }
