@@ -156,6 +156,34 @@ pub fn build_args(spec: &OutputSpec, out: &Path) -> Vec<String> {
     ];
 
     match spec.container {
+        Container::Mp4 if spec.hardware => {
+            // VAAPI hardware encode (spec EXP-08): initialize the render node,
+            // upload each frame to the GPU, then use the fixed-function encoder.
+            // VAAPI uses `-qp` for constant quality (there is no `-crf`).
+            a.push("-vaapi_device".into());
+            a.push("/dev/dri/renderD128".into());
+            a.push("-vf".into());
+            a.push("format=nv12,hwupload".into());
+            let codec = match spec.codec {
+                Codec::H265 => "hevc_vaapi",
+                // VP9 VAAPI support is rare; fall back to H.264 VAAPI.
+                _ => "h264_vaapi",
+            };
+            a.push("-c:v".into());
+            a.push(codec.into());
+            match spec.rate_control {
+                RateControl::Crf { crf } => {
+                    a.push("-qp".into());
+                    a.push(crf.to_string());
+                }
+                RateControl::Bitrate { bitrate_kbps } => {
+                    a.push("-b:v".into());
+                    a.push(format!("{bitrate_kbps}k"));
+                }
+            }
+            a.push("-movflags".into());
+            a.push("+faststart".into());
+        }
         Container::Mp4 => {
             let codec = match spec.codec {
                 Codec::H264 => "libx264",
@@ -245,6 +273,30 @@ mod tests {
         let args = build_args(&spec, Path::new("out.mp4"));
         assert!(args.windows(2).any(|w| w == ["-b:v", "4000k"]));
         assert!(!args.iter().any(|s| s == "-crf"));
+    }
+
+    #[test]
+    fn hardware_mp4_args_select_vaapi() {
+        let mut spec = mp4_spec();
+        spec.hardware = true;
+        let args = build_args(&spec, Path::new("out.mp4"));
+        assert!(args.windows(2).any(|w| w == ["-c:v", "h264_vaapi"]));
+        assert!(args
+            .windows(2)
+            .any(|w| w == ["-vf", "format=nv12,hwupload"]));
+        // VAAPI uses -qp, never -crf or the software pix_fmt.
+        assert!(args.windows(2).any(|w| w == ["-qp", "20"]));
+        assert!(!args.iter().any(|s| s == "-crf"));
+        assert!(!args.iter().any(|s| s == "libx264"));
+    }
+
+    #[test]
+    fn hardware_h265_uses_hevc_vaapi() {
+        let mut spec = mp4_spec();
+        spec.hardware = true;
+        spec.codec = Codec::H265;
+        let args = build_args(&spec, Path::new("out.mp4"));
+        assert!(args.windows(2).any(|w| w == ["-c:v", "hevc_vaapi"]));
     }
 
     #[test]

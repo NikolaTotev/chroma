@@ -10,8 +10,8 @@
 use chroma_compositor::CpuCompositor;
 use chroma_core_api::fakes::FakeCameraModifier;
 use chroma_core_api::{
-    Background, CameraTarget, GradientStop, Modifier, Point, SceneStyle, Shadow, Size, TimeRange,
-    TimeStamp,
+    Background, CameraTarget, GradientStop, Modifier, PassthroughSmoother, Point, SceneStyle,
+    Shadow, Size, TimeRange, TimeStamp,
 };
 use chroma_media_api::{Codec, Container, Encoder, GifSettings, OutputSpec, RateControl};
 use chroma_media_ffmpeg::{ffmpeg_available, FfmpegEncoder};
@@ -114,6 +114,7 @@ fn main() {
             },
             Some(center),
             std::slice::from_ref(&camera),
+            &mut PassthroughSmoother,
             &mut compositor,
             TimeStamp::from_nanos(i as u64 * frame_ns),
         );

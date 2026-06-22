@@ -12,10 +12,14 @@
 mod cropzoom;
 mod cursor;
 mod easing;
+mod keyframe_camera;
 mod text;
 
 pub use cropzoom::CropZoomModifier;
-pub use cursor::{CursorFollowModifier, HighlightModifier};
+pub use cursor::{
+    ClickRippleModifier, CursorFollowModifier, CursorMarkerModifier, HighlightModifier,
+};
+pub use keyframe_camera::KeyframeCameraModifier;
 pub use text::TextModifier;
 
 use chroma_core_api::{Modifier, ModifierParams, ModifierSpec};
@@ -45,6 +49,27 @@ pub fn build(spec: &ModifierSpec) -> Box<dyn Modifier> {
         ModifierParams::Highlight { radius } => Box::new(HighlightModifier {
             range: spec.range,
             radius: *radius,
+        }),
+        ModifierParams::CursorMarker { size } => Box::new(CursorMarkerModifier {
+            range: spec.range,
+            size: *size,
+        }),
+        ModifierParams::ClickRipple { center, max_radius } => Box::new(ClickRippleModifier {
+            range: spec.range,
+            center: *center,
+            max_radius: *max_radius,
+        }),
+        ModifierParams::KeyframeCamera {
+            center_x,
+            center_y,
+            scale,
+            weight,
+        } => Box::new(KeyframeCameraModifier {
+            range: spec.range,
+            center_x: center_x.clone(),
+            center_y: center_y.clone(),
+            scale: scale.clone(),
+            weight: *weight,
         }),
     }
 }

@@ -8,15 +8,22 @@
 # backend builds on Linux/WSL. chroma-capture-wayland (M7) is still deferred.
 [workspace]
 resolver = "2"
+# The Tauri desktop shell under `app/src-tauri` is its own workspace (it pulls
+# the heavy webview deps); keep it out of this one entirely.
+exclude = ["app"]
 members = [
     "crates/chroma-core-api",
     "crates/chroma-capture-api",
     "crates/chroma-media-api",
     "crates/chroma-capture-x11",
+    "crates/chroma-capture-wayland",
     "crates/chroma-compositor",
+    "crates/chroma-camera",
     "crates/chroma-render",
     "crates/chroma-media-ffmpeg",
     "crates/chroma-modifiers",
+    "crates/chroma-project",
+    "crates/chroma-studio",
     "crates/chroma-app",
 ]
 

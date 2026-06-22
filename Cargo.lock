@@ -12,6 +12,7 @@ checksum = "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8"
 name = "chroma-app"
 version = "0.1.0"
 dependencies = [
+ "chroma-camera",
  "chroma-capture-api",
  "chroma-capture-x11",
  "chroma-compositor",
@@ -23,11 +24,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "chroma-camera"
+version = "0.1.0"
+dependencies = [
+ "chroma-core-api",
+]
+
+[[package]]
 name = "chroma-capture-api"
 version = "0.1.0"
 dependencies = [
  "chroma-core-api",
  "serde",
+]
+
+[[package]]
+name = "chroma-capture-wayland"
+version = "0.1.0"
+dependencies = [
+ "chroma-capture-api",
+ "chroma-core-api",
 ]
 
 [[package]]
@@ -81,12 +97,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "chroma-project"
+version = "0.1.0"
+dependencies = [
+ "chroma-core-api",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "chroma-render"
 version = "0.1.0"
 dependencies = [
  "chroma-compositor",
  "chroma-core-api",
  "chroma-media-api",
+]
+
+[[package]]
+name = "chroma-studio"
+version = "0.1.0"
+dependencies = [
+ "chroma-camera",
+ "chroma-compositor",
+ "chroma-core-api",
+ "chroma-media-api",
+ "chroma-media-ffmpeg",
+ "chroma-modifiers",
+ "chroma-project",
+ "chroma-render",
 ]
 
 [[package]]

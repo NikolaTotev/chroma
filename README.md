@@ -27,9 +27,24 @@ or GIF.
 - **M4 — Effects:** `chroma-modifiers` implements Crop/Zoom, Text,
   Cursor-Follow, and Highlight as `Modifier`s, built from project `ModifierSpec`
   data. `chroma-app` ties it together into the **`chroma` CLI**.
-
-Remaining: M5 spring cursor-follow camera, M6 keyframes/undo/presets/HW encode,
-M7 Wayland capture, and the Tauri + SvelteKit editor GUI (ORCHESTRATION.md §4).
+- **M5 — Camera & cursor:** `chroma-camera` adds a critically-damped spring
+  (`SpringSmoother`, a `CameraSmoother`) so cursor-follow glides instead of
+  snapping (CAM-02), injected into the render core. `chroma-modifiers` gains a
+  synthetic cursor marker (CAM-05) and a click ripple (CAM-06); `chroma render`
+  now demos all three end to end.
+- **M6 — Project & editing:** keyframe `Track`s (core-api) drive a
+  `KeyframeCamera` modifier (EDT-06); `chroma-project` adds versioned JSON
+  save/load (EDT-11), a lossless undo/redo `History` of `EditCommand`s (EDT-10),
+  and built-in look `Preset`s (EDT-09). `chroma-media-ffmpeg` gains a VAAPI
+  hardware-encode path (EXP-08).
+- **M7 — Wayland capture:** `chroma-capture-wayland` is the Wayland backend slot
+  implementing the capture contracts; the ScreenCast-portal + PipeWire flow is
+  behind an opt-in `portal` feature (needs a live Wayland session), reporting
+  `Unavailable` until then. See `crates/chroma-capture-wayland/src/portal.rs`.
+- **GUI — Chroma Studio:** `chroma-studio` is the headless editor engine
+  (project + undo history + preview render + export), and `app/` is a
+  Tauri + Svelte desktop editor over it (preview, presets, scene styling,
+  timeline, undo/redo, export). See [app/README.md](app/README.md).
 
 ## Run it (the `chroma` CLI)
 
@@ -57,20 +72,25 @@ crates/
   chroma-core-api/     # value types + Modifier/Compositor traits (no logic)
   chroma-capture-api/  # ScreenCapturer, EventSource, Clock + Frame/InputEvent
   chroma-media-api/    # Decoder, Encoder, FrameSource + codec/param types
-  chroma-capture-x11/  # X11 capture backend (Linux); stub elsewhere
-  chroma-compositor/   # CPU reference compositor (implements Compositor)
-  chroma-render/       # deterministic §3.4 render pipeline → composited frame
-  chroma-media-ffmpeg/ # ffmpeg-subprocess Encoder → MP4 / GIF
-  chroma-modifiers/    # effects: CropZoom, Text, CursorFollow, Highlight
-  chroma-app/          # composition root: the `chroma` CLI
+  chroma-capture-x11/      # X11 capture backend (Linux); stub elsewhere
+  chroma-capture-wayland/  # Wayland capture backend (portal+PipeWire; feature-gated)
+  chroma-compositor/       # CPU reference compositor (implements Compositor)
+  chroma-camera/           # critically-damped spring camera smoother (CameraSmoother)
+  chroma-render/           # deterministic §3.4 render pipeline → composited frame
+  chroma-media-ffmpeg/     # ffmpeg-subprocess Encoder → MP4 / GIF
+  chroma-modifiers/        # effects: CropZoom, Text, CursorFollow, Highlight, KeyframeCamera
+  chroma-project/          # versioned save/load, undo/redo history, look presets
+  chroma-studio/           # headless editor engine (project + history + preview + export)
+  chroma-app/              # composition root: the `chroma` CLI
+app/                       # Tauri + Svelte desktop editor (Chroma Studio)
 ```
 
 Contract crates hold **only** traits, value types, and fakes. Implementation
 crates depend on the `-api` crates, never on each other's internals.
 
-Deferred (added at their milestones — see DECISIONS.md): `chroma-capture-wayland`
-(M7), `chroma-camera` (M5), `chroma-project`, `chroma-tauri`, and the SvelteKit
-front end under `app/`.
+The deferred crates have now landed; the live PipeWire capture (Wayland
+`portal` feature) is the one remaining piece that needs a real Wayland session
+to finish and verify.
 
 ## Build
 

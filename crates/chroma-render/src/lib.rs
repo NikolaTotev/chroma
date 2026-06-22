@@ -16,8 +16,8 @@
 //! no change here.
 
 use chroma_core_api::{
-    Background, CameraState, Compositor, EvalContext, Modifier, ModifierKind, Point, SceneStyle,
-    Size, SourceImage, TimeStamp,
+    Background, CameraSmoother, CameraState, Compositor, EvalContext, Modifier, ModifierKind,
+    Point, SceneStyle, Size, SourceImage, TimeStamp,
 };
 use chroma_media_api::RgbaFrame;
 
@@ -33,6 +33,11 @@ pub struct SourceFrame<'a> {
 /// `modifiers` are in lane order (index 0 = bottom lane); camera modifiers drive
 /// the virtual camera, overlay modifiers paint after the scene. `cursor` is the
 /// smoothed cursor position in normalized canvas coordinates, or `None`.
+///
+/// `smoother` maps the solved instantaneous camera target to the camera applied
+/// this frame. It is stateful (a spring keeps velocity across frames), so the
+/// caller threads one smoother through the whole clip; pass a
+/// [`chroma_core_api::PassthroughSmoother`] for the raw, unsmoothed camera.
 #[allow(clippy::too_many_arguments)]
 pub fn render_frame(
     canvas: Size,
@@ -41,6 +46,7 @@ pub fn render_frame(
     source: &SourceFrame<'_>,
     cursor: Option<Point>,
     modifiers: &[Box<dyn Modifier>],
+    smoother: &mut dyn CameraSmoother,
     compositor: &mut dyn Compositor,
     time: TimeStamp,
 ) -> RgbaFrame {
@@ -51,8 +57,10 @@ pub fn render_frame(
         source: source.size,
     };
 
-    // Stage 2: camera solve.
-    let camera = solve_camera(modifiers, &ctx);
+    // Stage 2: camera solve — blend modifiers into the instantaneous target,
+    // then smooth it across frames (spec CAM-02).
+    let target = solve_camera_target(modifiers, &ctx);
+    let camera = smoother.smooth(target, &ctx);
 
     // Stage 3: scene composite.
     compositor.render_scene(
@@ -81,13 +89,13 @@ pub fn render_frame(
     }
 }
 
-/// Blends all active camera modifiers into one [`CameraState`] by weighted
-/// average of their contributions, falling back to the identity camera.
+/// Blends all active camera modifiers into one instantaneous [`CameraState`]
+/// target by weighted average of their contributions, falling back to the
+/// identity camera.
 ///
-/// This is the M2 static/blended solve; spring smoothing and the documented
-/// cross-fade rule (spec §3.4) are `chroma-camera`'s job (M5) and slot in here
-/// without changing the pipeline.
-fn solve_camera(modifiers: &[Box<dyn Modifier>], ctx: &EvalContext) -> CameraState {
+/// This is the raw per-frame goal; temporal smoothing of that goal across
+/// frames is the injected [`CameraSmoother`]'s job (`chroma-camera`, M5).
+fn solve_camera_target(modifiers: &[Box<dyn Modifier>], ctx: &EvalContext) -> CameraState {
     let (mut cx, mut cy, mut cs, mut wsum) = (0.0f32, 0.0f32, 0.0f32, 0.0f32);
     for modifier in modifiers {
         if modifier.kind() != ModifierKind::Camera || !modifier.time_range().contains(ctx.time) {
@@ -116,7 +124,7 @@ mod tests {
     use super::*;
     use chroma_compositor::CpuCompositor;
     use chroma_core_api::fakes::{FakeCameraModifier, FakeOverlayModifier};
-    use chroma_core_api::{CameraTarget, Rect, TimeRange};
+    use chroma_core_api::{CameraTarget, PassthroughSmoother, Rect, TimeRange};
 
     fn red_source(n: u32) -> Vec<u8> {
         let mut v = Vec::new();
@@ -155,6 +163,7 @@ mod tests {
             &source,
             None,
             &[],
+            &mut PassthroughSmoother,
             &mut comp,
             TimeStamp::from_nanos(0),
         );
@@ -183,6 +192,7 @@ mod tests {
             &source,
             None,
             std::slice::from_ref(&overlay),
+            &mut PassthroughSmoother,
             &mut comp,
             TimeStamp::from_nanos(10),
         );
@@ -224,6 +234,7 @@ mod tests {
             &source,
             None,
             std::slice::from_ref(&cam),
+            &mut PassthroughSmoother,
             &mut comp,
             TimeStamp::from_nanos(10),
         );
@@ -260,6 +271,7 @@ mod tests {
                 &source,
                 None,
                 &[],
+                &mut PassthroughSmoother,
                 &mut comp,
                 TimeStamp::from_nanos(500),
             )

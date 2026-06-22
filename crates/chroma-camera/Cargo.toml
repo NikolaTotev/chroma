@@ -1,0 +1,11 @@
+[package]
+name = "chroma-camera"
+description = "Critically-damped spring camera smoother: turns the render core's per-frame camera target into smooth, jitter-free motion (spec CAM-02). Implements chroma-core-api::CameraSmoother."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }

@@ -23,8 +23,10 @@ mod camera;
 mod compositor;
 mod eval;
 mod geometry;
+mod keyframe;
 mod modifier;
 mod project;
+mod smoother;
 mod time;
 
 pub mod fakes;
@@ -33,9 +35,11 @@ pub use camera::{CameraState, CameraTarget};
 pub use compositor::{Compositor, SourceImage};
 pub use eval::EvalContext;
 pub use geometry::{Point, Rect, Size};
+pub use keyframe::{Easing, Keyframe, Track};
 pub use modifier::{CompositePass, Modifier, ModifierKind};
 pub use project::{
     Background, Border, GradientStop, ModifierParams, ModifierSpec, Project, SceneStyle, Shadow,
     SourceMedia,
 };
+pub use smoother::{CameraSmoother, PassthroughSmoother};
 pub use time::{TimeRange, TimeStamp};

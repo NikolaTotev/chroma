@@ -1,0 +1,21 @@
+[package]
+name = "chroma-capture-wayland"
+description = "Chroma Wayland capture backend: screen frames via the XDG ScreenCast portal + PipeWire, input via the RemoteDesktop portal / libei, on the shared monotonic clock. Implements chroma-capture-api. Linux/Wayland-only."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }
+chroma-capture-api = { workspace = true }
+
+# The real backend binds the XDG desktop portals (ashpd) and PipeWire, both of
+# which need a live Wayland session and system libraries (libpipewire-0.3-dev).
+# They are kept behind an opt-in `portal` feature so the cross-platform
+# workspace builds and tests without those system deps; until the feature is
+# wired the backend reports `Unavailable` (see src/lib.rs and src/portal.rs).
+[features]
+default = []
+portal = []

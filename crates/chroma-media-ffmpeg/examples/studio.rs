@@ -9,8 +9,8 @@
 
 use chroma_compositor::CpuCompositor;
 use chroma_core_api::{
-    Background, GradientStop, ModifierKind, ModifierParams, ModifierSpec, Rect, SceneStyle, Shadow,
-    Size, TimeRange, TimeStamp,
+    Background, GradientStop, ModifierKind, ModifierParams, ModifierSpec, PassthroughSmoother,
+    Rect, SceneStyle, Shadow, Size, TimeRange, TimeStamp,
 };
 use chroma_media_api::{Codec, Container, Encoder, GifSettings, OutputSpec, RateControl};
 use chroma_media_ffmpeg::{ffmpeg_available, FfmpegEncoder};
@@ -118,6 +118,7 @@ fn main() {
             },
             None,
             &modifiers,
+            &mut PassthroughSmoother,
             &mut compositor,
             TimeStamp::from_nanos(i as u64 * frame_ns),
         );

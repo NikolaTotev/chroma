@@ -8,7 +8,9 @@
 //! Usage: `cargo run -p chroma-render --example compose -- [out.bmp] [WxH]`
 
 use chroma_compositor::CpuCompositor;
-use chroma_core_api::{Background, GradientStop, Point, SceneStyle, Shadow, Size, TimeStamp};
+use chroma_core_api::{
+    Background, GradientStop, PassthroughSmoother, Point, SceneStyle, Shadow, Size, TimeStamp,
+};
 use chroma_render::{render_frame, SourceFrame};
 use std::io::Write;
 
@@ -80,6 +82,7 @@ fn main() {
         },
         Some(Point::new(0.5, 0.5)),
         &[],
+        &mut PassthroughSmoother,
         &mut compositor,
         TimeStamp::from_nanos(0),
     );

@@ -1,0 +1,35 @@
+# The Tauri desktop shell. It has its own `[workspace]` so the heavy webview
+# dependency tree (tauri/wry/webkit) stays out of the core Rust workspace; it
+# references the engine crates by relative path. Building this needs the Tauri
+# toolchain and the platform webview libs (WebView2 on Windows,
+# libwebkit2gtk-4.1 on Linux) — see README.
+[package]
+name = "chroma-studio-tauri"
+version = "0.1.0"
+description = "Chroma Studio desktop shell (Tauri)."
+edition = "2021"
+rust-version = "1.90"
+
+[workspace]
+
+[lib]
+name = "chroma_studio_tauri"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+
+chroma-core-api = { path = "../../crates/chroma-core-api" }
+chroma-studio = { path = "../../crates/chroma-studio" }
+
+[features]
+# Default to the dev webview; release builds enable custom protocol asset
+# loading via tauri's bundling.
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

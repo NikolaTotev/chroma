@@ -1,0 +1,13 @@
+[package]
+name = "chroma-project"
+description = "Project persistence and editing: versioned JSON save/load of a chroma-core-api Project, an undo/redo command history, and built-in look presets. The data layer the GUI edits."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -14,6 +14,7 @@
 //! This is the only crate that depends on implementation crates — it composes
 //! them; everything else depends on `-api` contracts (ORCHESTRATION.md §3).
 
+use chroma_camera::SpringSmoother;
 use chroma_capture_api::{CaptureTarget, Clock, EventSource, Frame, InputEvent, ScreenCapturer};
 use chroma_compositor::CpuCompositor;
 use chroma_core_api::{
@@ -100,6 +101,11 @@ fn output_spec(out: &str, canvas: Size, fps: u32) -> OutputSpec {
 }
 
 /// `chroma render` — synthetic demo project → styled video.
+///
+/// Exercises the full M5 path with no real capture: a synthetic cursor glides
+/// across the demo screen, a spring-smoothed cursor-follow camera tracks it
+/// (`chroma-camera`), a crisp cursor marker is drawn over it, and a click
+/// ripple fires halfway through.
 fn cmd_render(out: &str, secs: u32, fps: u32) -> i32 {
     if !ffmpeg_available() {
         eprintln!("ffmpeg not found on PATH — `sudo apt install ffmpeg`");
@@ -109,19 +115,42 @@ fn cmd_render(out: &str, secs: u32, fps: u32) -> i32 {
     let (sw, sh) = (320u32, 180u32);
     let source = demo_screen(sw, sh);
     let (background, scene) = styled();
+    let secs_f = secs as f32;
     let secs_ts = |s: f32| TimeStamp::from_nanos((s * 1e9) as u64);
 
+    // A synthetic click halfway through, at wherever the cursor is by then.
+    let click_t = secs_f * 0.5;
+    let click_at = synthetic_cursor(click_t);
+
     let specs = vec![
+        // Spring-smoothed cursor-follow camera (M5 / CAM-02).
         ModifierSpec {
             kind: ModifierKind::Camera,
-            range: TimeRange::new(secs_ts(1.0), secs_ts(secs as f32 - 1.0)),
-            params: ModifierParams::CropZoom {
-                target: Rect::new(0.05, 0.05, 0.35, 0.35),
+            range: TimeRange::new(secs_ts(0.3), secs_ts(secs_f - 0.3)),
+            params: ModifierParams::CursorFollow {
+                zoom: 1.8,
+                tightness: 1.0,
             },
         },
+        // Synthetic cursor marker drawn at the smoothed cursor (M5 / CAM-05).
         ModifierSpec {
             kind: ModifierKind::Overlay,
-            range: TimeRange::new(secs_ts(0.5), secs_ts(secs as f32 - 0.5)),
+            range: TimeRange::new(TimeStamp::ZERO, secs_ts(secs_f)),
+            params: ModifierParams::CursorMarker { size: 0.05 },
+        },
+        // Click ripple at the synthetic click (M5 / CAM-06).
+        ModifierSpec {
+            kind: ModifierKind::Overlay,
+            range: TimeRange::new(secs_ts(click_t), secs_ts(click_t + 0.6)),
+            params: ModifierParams::ClickRipple {
+                center: click_at,
+                max_radius: 0.12,
+            },
+        },
+        // Title text.
+        ModifierSpec {
+            kind: ModifierKind::Overlay,
+            range: TimeRange::new(secs_ts(0.5), secs_ts(secs_f - 0.5)),
             params: ModifierParams::Text {
                 content: "Chroma".to_owned(),
                 rect: Rect::new(0.30, 0.82, 0.40, 0.10),
@@ -137,8 +166,10 @@ fn cmd_render(out: &str, secs: u32, fps: u32) -> i32 {
         return 1;
     }
     let mut compositor = CpuCompositor::new();
+    let mut smoother = SpringSmoother::default();
     let frame_ns = 1_000_000_000u64 / fps as u64;
     for i in 0..(secs * fps).max(1) {
+        let t = i as f32 * frame_ns as f32 / 1e9;
         let frame = render_frame(
             canvas,
             &background,
@@ -147,8 +178,9 @@ fn cmd_render(out: &str, secs: u32, fps: u32) -> i32 {
                 size: Size::new(sw, sh),
                 rgba: &source,
             },
-            None,
+            Some(synthetic_cursor(t)),
             &modifiers,
+            &mut smoother,
             &mut compositor,
             TimeStamp::from_nanos(i as u64 * frame_ns),
         );
@@ -167,6 +199,15 @@ fn cmd_render(out: &str, secs: u32, fps: u32) -> i32 {
             1
         }
     }
+}
+
+/// A smooth synthetic cursor path in normalized canvas coordinates at time `t`
+/// seconds, used by `render` to drive cursor-follow without a real capture.
+fn synthetic_cursor(t: f32) -> Point {
+    Point::new(
+        0.5 + 0.28 * (t * 1.3).sin(),
+        0.5 + 0.22 * (t * 0.9 + 1.0).sin(),
+    )
 }
 
 /// `chroma record` — capture the X11 desktop, then composite + export.
@@ -222,16 +263,42 @@ fn cmd_record(out: &str, secs: u32, fps: u32) -> i32 {
     let canvas = Size::new(first.size.width & !1, first.size.height & !1);
     println!("captured {} frames; rendering …", frames.len());
 
-    // A cursor-follow camera over the whole clip.
+    // A spring-smoothed cursor-follow camera over the whole clip, a synthetic
+    // cursor marker, and a click ripple per recorded mouse-down (M5).
     let full = TimeRange::new(TimeStamp::ZERO, TimeStamp::from_nanos(u64::MAX));
-    let modifiers = build_all(&[ModifierSpec {
-        kind: ModifierKind::Camera,
-        range: full,
-        params: ModifierParams::CursorFollow {
-            zoom: 1.6,
-            tightness: 1.0,
+    let mut specs = vec![
+        ModifierSpec {
+            kind: ModifierKind::Camera,
+            range: full,
+            params: ModifierParams::CursorFollow {
+                zoom: 1.6,
+                tightness: 1.0,
+            },
         },
-    }]);
+        ModifierSpec {
+            kind: ModifierKind::Overlay,
+            range: full,
+            params: ModifierParams::CursorMarker { size: 0.04 },
+        },
+    ];
+    for e in &events {
+        if let InputEvent::ButtonDown { x, y, .. } = e.event {
+            let center = Point::new(
+                (x / first.size.width.max(1) as f32).clamp(0.0, 1.0),
+                (y / first.size.height.max(1) as f32).clamp(0.0, 1.0),
+            );
+            let end = TimeStamp::from_nanos(e.timestamp.as_nanos() + 600_000_000);
+            specs.push(ModifierSpec {
+                kind: ModifierKind::Overlay,
+                range: TimeRange::new(e.timestamp, end),
+                params: ModifierParams::ClickRipple {
+                    center,
+                    max_radius: 0.12,
+                },
+            });
+        }
+    }
+    let modifiers = build_all(&specs);
     let (background, scene) = styled();
 
     let mut encoder = FfmpegEncoder::new(out);
@@ -240,6 +307,7 @@ fn cmd_record(out: &str, secs: u32, fps: u32) -> i32 {
         return 1;
     }
     let mut compositor = CpuCompositor::new();
+    let mut smoother = SpringSmoother::default();
     for frame in &frames {
         let rgba = bgra_to_rgba(frame);
         let cursor = cursor_at(&events, frame.timestamp, frame.size);
@@ -253,6 +321,7 @@ fn cmd_record(out: &str, secs: u32, fps: u32) -> i32 {
             },
             cursor,
             &modifiers,
+            &mut smoother,
             &mut compositor,
             frame.timestamp,
         );

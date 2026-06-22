@@ -1,0 +1,18 @@
+[package]
+name = "chroma-studio"
+description = "Chroma's headless editor engine: holds the Project plus undo history, renders preview frames, applies presets/edits, and exports video. The logic the GUI (Tauri) and tests drive, with no UI dependency."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }
+chroma-project = { path = "../chroma-project" }
+chroma-render = { path = "../chroma-render" }
+chroma-compositor = { path = "../chroma-compositor" }
+chroma-camera = { path = "../chroma-camera" }
+chroma-modifiers = { path = "../chroma-modifiers" }
+chroma-media-api = { workspace = true }
+chroma-media-ffmpeg = { path = "../chroma-media-ffmpeg" }

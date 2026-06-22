@@ -1,6 +1,7 @@
 //! The serializable project model.
 
-use crate::geometry::{Rect, Size};
+use crate::geometry::{Point, Rect, Size};
+use crate::keyframe::Track;
 use crate::modifier::ModifierKind;
 use crate::time::TimeRange;
 use serde::{Deserialize, Serialize};
@@ -183,5 +184,32 @@ pub enum ModifierParams {
     Highlight {
         /// Highlight radius in normalized canvas units.
         radius: f32,
+    },
+    /// Draw a synthetic cursor marker at the smoothed cursor position
+    /// (spec CAM-05). Replaces the recorded OS cursor with a crisp,
+    /// resolution-independent pointer.
+    CursorMarker {
+        /// Pointer height in normalized canvas units.
+        size: f32,
+    },
+    /// An expanding ring emitted at a click, animated over the modifier's range
+    /// (spec CAM-06).
+    ClickRipple {
+        /// Ring center in normalized canvas coordinates (the click location).
+        center: Point,
+        /// Outer radius the ring grows to at the end of its range.
+        max_radius: f32,
+    },
+    /// A keyframed camera move: each component is its own animation track
+    /// (spec EDT-06). Empty tracks fall back to the identity camera value.
+    KeyframeCamera {
+        /// Camera center X over time (normalized canvas), default `0.5`.
+        center_x: Track,
+        /// Camera center Y over time (normalized canvas), default `0.5`.
+        center_y: Track,
+        /// Zoom factor over time, default `1.0`.
+        scale: Track,
+        /// Blend weight against other camera modifiers in `[0.0, 1.0]`.
+        weight: f32,
     },
 }
