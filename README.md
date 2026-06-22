@@ -17,17 +17,37 @@ or GIF.
 - **M0 — Contracts:** the three `-api` crates compile with fakes and clean docs.
 - **M1 — X11 capture:** `chroma-capture-x11` implements screen frames
   (`GetImage`), input events (XInput2), and a shared monotonic clock.
-- **M2 — Render core (in progress):** `chroma-compositor` (CPU) composites a
-  background + camera-transformed scene inset; `chroma-render` wires the §3.4
-  pipeline into one deterministic composited frame. (Live preview window and the
-  wgpu compositor are still to come.)
+- **M2 — Render core:** `chroma-compositor` (CPU) composites a background +
+  camera-transformed scene inset; `chroma-render` wires the §3.4 pipeline into
+  one deterministic composited frame. (Live preview window and the wgpu
+  compositor are still to come.)
+- **M3 — Export:** `chroma-media-ffmpeg` encodes composited frames to **MP4**
+  (libx264) and **GIF** (two-pass palette) via the `ffmpeg` CLI. Requires
+  `ffmpeg` on `PATH`.
+- **M4 — Effects:** `chroma-modifiers` implements Crop/Zoom, Text,
+  Cursor-Follow, and Highlight as `Modifier`s, built from project `ModifierSpec`
+  data. `chroma-app` ties it together into the **`chroma` CLI**.
 
-Remaining implementation crates land milestone by milestone (ORCHESTRATION.md §4).
+Remaining: M5 spring cursor-follow camera, M6 keyframes/undo/presets/HW encode,
+M7 Wayland capture, and the Tauri + SvelteKit editor GUI (ORCHESTRATION.md §4).
 
-To see a composited frame, render the demo and open the BMP:
+## Run it (the `chroma` CLI)
+
+Needs `ffmpeg` installed (`sudo apt install ffmpeg`).
 
 ```sh
-cargo run -p chroma-render --example compose      # writes out.bmp
+# Render the built-in styled demo (crop-zoom + text) — works anywhere:
+cargo run -p chroma-app --bin chroma -- render out.mp4 5 30
+
+# Record the desktop, styled with a cursor-follow camera (native X11 only):
+cargo run -p chroma-app --bin chroma -- record recording.mp4 8 30
+```
+
+Lower-level demos:
+
+```sh
+cargo run -p chroma-render --example compose                  # → out.bmp (one frame)
+cargo run -p chroma-media-ffmpeg --example studio -- out.mp4  # → effects clip
 ```
 
 ## Workspace layout
@@ -40,15 +60,17 @@ crates/
   chroma-capture-x11/  # X11 capture backend (Linux); stub elsewhere
   chroma-compositor/   # CPU reference compositor (implements Compositor)
   chroma-render/       # deterministic §3.4 render pipeline → composited frame
+  chroma-media-ffmpeg/ # ffmpeg-subprocess Encoder → MP4 / GIF
+  chroma-modifiers/    # effects: CropZoom, Text, CursorFollow, Highlight
+  chroma-app/          # composition root: the `chroma` CLI
 ```
 
 Contract crates hold **only** traits, value types, and fakes. Implementation
 crates depend on the `-api` crates, never on each other's internals.
 
 Deferred (added at their milestones — see DECISIONS.md): `chroma-capture-wayland`
-(M7) plus the logic crates `chroma-media-ffmpeg`, `chroma-modifiers`,
-`chroma-camera`, `chroma-project`, `chroma-app`, `chroma-tauri`, and the
-SvelteKit front end under `app/`.
+(M7), `chroma-camera` (M5), `chroma-project`, `chroma-tauri`, and the SvelteKit
+front end under `app/`.
 
 ## Build
 

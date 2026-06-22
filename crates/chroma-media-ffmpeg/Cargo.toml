@@ -1,0 +1,19 @@
+[package]
+name = "chroma-media-ffmpeg"
+description = "Chroma FFmpeg-backed media I/O: an Encoder that pipes composited RGBA frames to the ffmpeg CLI to produce MP4 (libx264) and GIF (two-pass palette). Implements chroma-media-api::Encoder."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }
+chroma-media-api = { workspace = true }
+
+# The end-to-end `clip` example renders frames to encode; these stay dev-only so
+# the encoder crate itself depends on contracts only.
+[dev-dependencies]
+chroma-render = { path = "../chroma-render" }
+chroma-compositor = { path = "../chroma-compositor" }
+chroma-modifiers = { path = "../chroma-modifiers" }

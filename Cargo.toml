@@ -15,6 +15,9 @@ members = [
     "crates/chroma-capture-x11",
     "crates/chroma-compositor",
     "crates/chroma-render",
+    "crates/chroma-media-ffmpeg",
+    "crates/chroma-modifiers",
+    "crates/chroma-app",
 ]
 
 [workspace.package]

@@ -1,0 +1,24 @@
+[package]
+name = "chroma-app"
+description = "Chroma application / composition root: the `chroma` CLI that records the X11 screen, composites it with effects, and exports a styled MP4/GIF."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "chroma"
+path = "src/main.rs"
+
+# The composition root is the one crate allowed to depend on implementation
+# crates — it wires them together (ORCHESTRATION.md §3).
+[dependencies]
+chroma-core-api = { workspace = true }
+chroma-capture-api = { workspace = true }
+chroma-capture-x11 = { path = "../chroma-capture-x11" }
+chroma-compositor = { path = "../chroma-compositor" }
+chroma-render = { path = "../chroma-render" }
+chroma-modifiers = { path = "../chroma-modifiers" }
+chroma-media-api = { workspace = true }
+chroma-media-ffmpeg = { path = "../chroma-media-ffmpeg" }

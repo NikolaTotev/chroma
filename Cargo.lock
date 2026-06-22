@@ -9,6 +9,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8"
 
 [[package]]
+name = "chroma-app"
+version = "0.1.0"
+dependencies = [
+ "chroma-capture-api",
+ "chroma-capture-x11",
+ "chroma-compositor",
+ "chroma-core-api",
+ "chroma-media-api",
+ "chroma-media-ffmpeg",
+ "chroma-modifiers",
+ "chroma-render",
+]
+
+[[package]]
 name = "chroma-capture-api"
 version = "0.1.0"
 dependencies = [
@@ -46,6 +60,24 @@ version = "0.1.0"
 dependencies = [
  "chroma-core-api",
  "serde",
+]
+
+[[package]]
+name = "chroma-media-ffmpeg"
+version = "0.1.0"
+dependencies = [
+ "chroma-compositor",
+ "chroma-core-api",
+ "chroma-media-api",
+ "chroma-modifiers",
+ "chroma-render",
+]
+
+[[package]]
+name = "chroma-modifiers"
+version = "0.1.0"
+dependencies = [
+ "chroma-core-api",
 ]
 
 [[package]]

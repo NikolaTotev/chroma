@@ -1,0 +1,11 @@
+[package]
+name = "chroma-modifiers"
+description = "Chroma effects: CropZoom, Text, CursorFollow, and Highlight, each a struct implementing chroma-core-api::Modifier, plus a factory that builds them from serializable ModifierSpec data."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }
