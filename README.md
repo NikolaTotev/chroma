@@ -46,17 +46,45 @@ or GIF.
   Tauri + Svelte desktop editor over it (preview, presets, scene styling,
   timeline, undo/redo, export). See [app/README.md](app/README.md).
 
-## Run it (the `chroma` CLI)
+## Running on Ubuntu
 
-Needs `ffmpeg` installed (`sudo apt install ffmpeg`).
+Tested on Ubuntu 22.04 / 24.04. All commands run from the **workspace root**
+(the folder with this `Cargo.toml` and `app/`).
+
+### Prerequisites
 
 ```sh
-# Render the built-in styled demo (crop-zoom + text) — works anywhere:
-cargo run -p chroma-app --bin chroma -- render out.mp4 5 30
+# Rust — the repo pins its toolchain via rust-toolchain.toml; rustup honors it
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
 
-# Record the desktop, styled with a cursor-follow camera (native X11 only):
+# ffmpeg is required for all video export
+sudo apt update
+sudo apt install -y ffmpeg build-essential pkg-config
+```
+
+### The `chroma` CLI (quickest path to a video)
+
+```sh
+# Render the built-in demo (spring cursor-follow + cursor marker + click ripple
+# + title) over a styled background. Works on any session:
+cargo run -p chroma-app --bin chroma -- render out.mp4 5 30
+#                                         ^cmd   ^file ^secs ^fps
+
+# Same, but GIF:
+cargo run -p chroma-app --bin chroma -- render out.gif 4 20
+
+# Record the actual desktop → cursor-follow styled video:
 cargo run -p chroma-app --bin chroma -- record recording.mp4 8 30
 ```
+
+Then `xdg-open out.mp4`.
+
+> ⚠️ **`record` needs a native X11 session.** Ubuntu defaults to **Wayland**,
+> where X11 cannot grab the root window (you'll get `BadMatch`/`Unavailable` —
+> the limitation M7's PipeWire path will solve). To record today, log out and
+> choose **"Ubuntu on Xorg"** at the login screen (gear icon), then run it.
+> `render` works on either session.
 
 Lower-level demos:
 
@@ -64,6 +92,53 @@ Lower-level demos:
 cargo run -p chroma-render --example compose                  # → out.bmp (one frame)
 cargo run -p chroma-media-ffmpeg --example studio -- out.mp4  # → effects clip
 ```
+
+### Chroma Studio (the desktop GUI)
+
+Install the GUI toolchain — Node plus Tauri's webview dependencies:
+
+```sh
+sudo apt install -y nodejs npm   # or use nvm for a newer Node (>= 18)
+
+# Tauri 2 system deps (Ubuntu 24.04 names):
+sudo apt install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+  libayatana-appindicator3-dev librsvg2-dev \
+  libssl-dev libxdo-dev curl wget file
+```
+On **Ubuntu 22.04** the webkit package is `libwebkit2gtk-4.0-dev` (not `-4.1-dev`).
+
+Run / bundle it:
+
+```sh
+cd app
+npm install
+npm run tauri dev      # builds the Rust shell + opens the window (first build is slow)
+npm run tauri build    # → installer/AppImage under app/src-tauri/target/release/bundle/
+```
+
+In the window: pick a **preset**, tweak **background/scene**, scrub the
+**timeline**, add/remove **modifiers**, **undo/redo**, and **Export** to MP4/GIF.
+The status badge reads **"desktop"** when the Rust backend is live.
+
+### Front end only (no Rust/Tauri, just a browser)
+
+Runs the UI against an in-browser mock studio — handy for a quick look:
+
+```sh
+cd app
+npm install
+npm run dev            # http://localhost:1420  (badge shows "preview (mock)")
+```
+
+### Notes
+
+- The first `cargo` build of the workspace, and the first `tauri dev`, take a few
+  minutes; later runs are incremental.
+- Export currently composites over a synthetic source (a real video decoder is the
+  next piece), so preview/export show the styling, camera, and overlays — not yet
+  your recorded footage.
+- Wayland *capture* (`chroma-capture-wayland`) is scaffolded but its live PipeWire
+  path isn't wired yet; use the X11/Xorg route above for actual screen recording.
 
 ## Workspace layout
 
