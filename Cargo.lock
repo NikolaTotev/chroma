@@ -119,6 +119,8 @@ name = "chroma-studio"
 version = "0.1.0"
 dependencies = [
  "chroma-camera",
+ "chroma-capture-api",
+ "chroma-capture-x11",
  "chroma-compositor",
  "chroma-core-api",
  "chroma-media-api",

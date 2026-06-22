@@ -41,10 +41,13 @@ or GIF.
   implementing the capture contracts; the ScreenCast-portal + PipeWire flow is
   behind an opt-in `portal` feature (needs a live Wayland session), reporting
   `Unavailable` until then. See `crates/chroma-capture-wayland/src/portal.rs`.
-- **GUI — Chroma Studio:** `chroma-studio` is the headless editor engine
-  (project + undo history + preview render + export), and `app/` is a
-  Tauri + Svelte desktop editor over it (preview, presets, scene styling,
-  timeline, undo/redo, export). See [app/README.md](app/README.md).
+- **GUI — Chroma Studio:** `chroma-studio` is the headless editor engine — it
+  **records** the screen to a source clip (`chroma-capture-x11` → temp MP4 +
+  event log), **decodes** that footage on demand (`chroma-media-ffmpeg`'s
+  `FfmpegDecoder`/`FfmpegFrameReader`), and renders/exports the styled result.
+  `app/` is a Tauri + Svelte desktop editor over it: **Record → edit → Export**
+  in one window (preview, presets, scene styling, timeline, undo/redo). See
+  [app/README.md](app/README.md).
 
 ## Running on Ubuntu
 
@@ -134,11 +137,12 @@ npm run dev            # http://localhost:1420  (badge shows "preview (mock)")
 
 - The first `cargo` build of the workspace, and the first `tauri dev`, take a few
   minutes; later runs are incremental.
-- Export currently composites over a synthetic source (a real video decoder is the
-  next piece), so preview/export show the styling, camera, and overlays — not yet
-  your recorded footage.
+- **Recording needs a native X11/Xorg session** (see the `record` note above) —
+  the Studio's Record button uses the same X11 backend. Until you record, preview
+  and export run over a built-in synthetic screen so the UI is usable immediately;
+  after recording, they run over your real footage (decoded on demand).
 - Wayland *capture* (`chroma-capture-wayland`) is scaffolded but its live PipeWire
-  path isn't wired yet; use the X11/Xorg route above for actual screen recording.
+  path isn't wired yet; record on an Xorg session for now.
 
 ## Workspace layout
 

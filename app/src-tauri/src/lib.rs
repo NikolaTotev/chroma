@@ -24,6 +24,8 @@ struct StateSnapshot {
     can_redo: bool,
     duration_ns: u64,
     presets: Vec<String>,
+    is_recording: bool,
+    record_elapsed_ns: u64,
 }
 
 fn snapshot(studio: &Studio) -> StateSnapshot {
@@ -33,6 +35,8 @@ fn snapshot(studio: &Studio) -> StateSnapshot {
         can_redo: studio.can_redo(),
         duration_ns: studio.timeline_duration_ns(),
         presets: studio.preset_names(),
+        is_recording: studio.is_recording(),
+        record_elapsed_ns: studio.record_elapsed_ns(),
     }
 }
 
@@ -97,6 +101,23 @@ fn redo(state: State<AppState>) -> StateSnapshot {
     snapshot(&s)
 }
 
+/// Starts recording the screen at `fps`. Errors if the capture backend is
+/// unavailable (needs a native X11/Xorg session).
+#[tauri::command]
+fn start_record(state: State<AppState>, fps: u32) -> Result<StateSnapshot, String> {
+    let mut s = state.0.lock().unwrap();
+    s.start_record(fps)?;
+    Ok(snapshot(&s))
+}
+
+/// Stops recording and loads the take as the editor's source.
+#[tauri::command]
+fn stop_record(state: State<AppState>) -> Result<StateSnapshot, String> {
+    let mut s = state.0.lock().unwrap();
+    s.stop_record()?;
+    Ok(snapshot(&s))
+}
+
 #[tauri::command]
 fn save_project(state: State<AppState>, path: String) -> Result<StateSnapshot, String> {
     let s = state.0.lock().unwrap();
@@ -148,6 +169,8 @@ pub fn run() {
             remove_modifier,
             undo,
             redo,
+            start_record,
+            stop_record,
             save_project,
             open_project,
             render_preview,

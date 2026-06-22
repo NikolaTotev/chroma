@@ -94,6 +94,31 @@
     const path = prompt("Open project from:", "project.chroma.json");
     if (path) apply(api.open(path));
   }
+
+  // --- recording ----------------------------------------------------------
+  let recElapsed = $state(0); // seconds
+  let recTimer: ReturnType<typeof setInterval> | null = null;
+  const fmtClock = (s: number) =>
+    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+  async function toggleRecord() {
+    if (view?.is_recording) {
+      if (recTimer) { clearInterval(recTimer); recTimer = null; }
+      status = "Loading recording…";
+      await apply(api.stopRecord()); // refreshes state + preview (now real footage)
+      status = "";
+      time = 0;
+    } else {
+      status = "";
+      try {
+        view = await api.startRecord(30);
+        recElapsed = 0;
+        recTimer = setInterval(() => (recElapsed += 1), 1000);
+      } catch (e) {
+        status = "Record failed: " + String(e);
+      }
+    }
+  }
 </script>
 
 <div class="app">
@@ -101,6 +126,11 @@
     <div class="brand">
       <span class="dot"></span> Chroma <span class="muted">Studio</span>
     </div>
+    {#if view?.is_recording}
+      <button class="rec recording" onclick={toggleRecord}>■ Stop {fmtClock(recElapsed)}</button>
+    {:else}
+      <button class="rec" onclick={toggleRecord} disabled={busy}>● Record</button>
+    {/if}
     <div class="spacer"></div>
     <button onclick={() => apply(api.newProject())} disabled={busy}>New</button>
     <button onclick={doOpen} disabled={busy}>Open</button>
@@ -249,6 +279,23 @@
   }
   .muted {
     color: var(--muted);
+  }
+
+  .rec {
+    border-color: #4a2b34;
+    color: #ff8aa0;
+  }
+  .rec.recording {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+    font-weight: 600;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    50% {
+      box-shadow: 0 0 0 4px rgba(224, 86, 111, 0.25);
+    }
   }
 
   .body {

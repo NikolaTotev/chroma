@@ -1,8 +1,17 @@
 # Chroma Studio (desktop GUI)
 
-A Tauri + Svelte editor for Chroma. The window hosts a live composited preview,
-a presets/background/scene panel, and a timeline of modifiers, with undo/redo and
-video export — all driven by the `chroma-studio` engine over Tauri commands.
+A Tauri + Svelte editor for Chroma. One window does the whole loop — **Record
+→ edit → Export**: click Record to capture the screen, stop to drop straight
+into editing it (live composited preview, presets/background/scene panel, a
+timeline of modifiers, undo/redo), then Export to MP4/GIF — all driven by the
+`chroma-studio` engine over Tauri commands.
+
+> **Recording needs a native X11 / Xorg session.** It uses the same X11 backend
+> as the CLI `chroma record`; on Wayland (Ubuntu's default) or rootless Xwayland
+> the Record button returns "unavailable". Log in via **"Ubuntu on Xorg"** to
+> record. Editing and export work on any session — including over a clip opened
+> with `Studio::load_clip`. Before you record, the editor runs over a built-in
+> synthetic screen so the UI is usable immediately.
 
 ## Architecture
 

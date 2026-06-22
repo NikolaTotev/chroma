@@ -62,6 +62,12 @@ export const api = {
   redo(): Promise<StudioState> {
     return inTauri ? invoke("redo") : mock.redo();
   },
+  startRecord(fps: number): Promise<StudioState> {
+    return inTauri ? invoke("start_record", { fps }) : mock.startRecord();
+  },
+  stopRecord(): Promise<StudioState> {
+    return inTauri ? invoke("stop_record") : mock.stopRecord();
+  },
   save(path: string): Promise<StudioState> {
     return inTauri ? invoke("save_project", { path }) : mock.state();
   },
@@ -113,6 +119,8 @@ const mockStore = {
   project: defaultProject(),
   undo: [] as Project[],
   redo: [] as Project[],
+  recording: false,
+  recordStart: 0,
 };
 
 function clone<T>(v: T): T {
@@ -135,6 +143,8 @@ function snapshot(): StudioState {
     can_redo: mockStore.redo.length > 0,
     duration_ns: duration,
     presets: Object.keys(PRESETS),
+    is_recording: mockStore.recording,
+    record_elapsed_ns: mockStore.recording ? (Date.now() - mockStore.recordStart) * 1e6 : 0,
   };
 }
 
@@ -188,6 +198,17 @@ const mock = {
       mockStore.undo.push(clone(mockStore.project));
       mockStore.project = next;
     }
+    return snapshot();
+  },
+  // The browser mock can't capture the screen; it just toggles the flag so the
+  // recording UI is exercisable. (The desktop app does the real capture.)
+  startRecord: async () => {
+    mockStore.recording = true;
+    mockStore.recordStart = Date.now();
+    return snapshot();
+  },
+  stopRecord: async () => {
+    mockStore.recording = false;
     return snapshot();
   },
   // A representative preview drawn on a canvas, so the browser build shows a

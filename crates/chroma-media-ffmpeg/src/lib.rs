@@ -14,6 +14,9 @@
 //! linking, no Rust deps. Hardware encode (VAAPI/NVENC, spec EXP-08) is a later
 //! addition to [`build_args`]; M3 is software.
 
+mod decode;
+pub use decode::{probe_video, FfmpegDecoder, FfmpegFrameReader, VideoInfo};
+
 use chroma_core_api::TimeStamp;
 use chroma_media_api::{
     Codec, Container, Encoder, MediaError, OutputSpec, RateControl, Result, RgbaFrame,

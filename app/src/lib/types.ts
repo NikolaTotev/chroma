@@ -100,6 +100,8 @@ export interface StudioState {
   can_redo: boolean;
   duration_ns: number;
   presets: string[];
+  is_recording: boolean;
+  record_elapsed_ns: number;
 }
 
 /** A short human label for a modifier's params, for the timeline. */

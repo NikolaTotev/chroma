@@ -9,6 +9,8 @@ repository.workspace = true
 
 [dependencies]
 chroma-core-api = { workspace = true }
+chroma-capture-api = { workspace = true }
+chroma-capture-x11 = { path = "../chroma-capture-x11" }
 chroma-project = { path = "../chroma-project" }
 chroma-render = { path = "../chroma-render" }
 chroma-compositor = { path = "../chroma-compositor" }
