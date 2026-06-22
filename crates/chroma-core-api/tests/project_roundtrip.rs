@@ -4,8 +4,8 @@
 //! serde before any real `chroma-project` (de)serialization logic exists.
 
 use chroma_core_api::{
-    Background, GradientStop, ModifierKind, ModifierParams, ModifierSpec, Project, Rect, Size,
-    SourceMedia, TimeRange, TimeStamp,
+    Background, GradientStop, ModifierKind, ModifierParams, ModifierSpec, Project, Rect,
+    SceneStyle, Size, SourceMedia, TimeRange, TimeStamp,
 };
 use std::path::PathBuf;
 
@@ -32,6 +32,7 @@ fn sample_project() -> Project {
                 },
             ],
         },
+        scene: SceneStyle::default(),
         modifiers: vec![
             ModifierSpec {
                 kind: ModifierKind::Camera,
@@ -72,6 +73,7 @@ fn empty_project_round_trips() {
         },
         canvas: Size::new(1280, 720),
         background: Background::Solid([0.0, 0.0, 0.0, 1.0]),
+        scene: SceneStyle::default(),
         modifiers: Vec::new(),
     };
 

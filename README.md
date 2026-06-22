@@ -17,17 +17,29 @@ or GIF.
 - **M0 — Contracts:** the three `-api` crates compile with fakes and clean docs.
 - **M1 — X11 capture:** `chroma-capture-x11` implements screen frames
   (`GetImage`), input events (XInput2), and a shared monotonic clock.
+- **M2 — Render core (in progress):** `chroma-compositor` (CPU) composites a
+  background + camera-transformed scene inset; `chroma-render` wires the §3.4
+  pipeline into one deterministic composited frame. (Live preview window and the
+  wgpu compositor are still to come.)
 
 Remaining implementation crates land milestone by milestone (ORCHESTRATION.md §4).
+
+To see a composited frame, render the demo and open the BMP:
+
+```sh
+cargo run -p chroma-render --example compose      # writes out.bmp
+```
 
 ## Workspace layout
 
 ```
 crates/
-  chroma-core-api/     # value types + Modifier trait + CompositePass (no logic)
+  chroma-core-api/     # value types + Modifier/Compositor traits (no logic)
   chroma-capture-api/  # ScreenCapturer, EventSource, Clock + Frame/InputEvent
   chroma-media-api/    # Decoder, Encoder, FrameSource + codec/param types
   chroma-capture-x11/  # X11 capture backend (Linux); stub elsewhere
+  chroma-compositor/   # CPU reference compositor (implements Compositor)
+  chroma-render/       # deterministic §3.4 render pipeline → composited frame
 ```
 
 Contract crates hold **only** traits, value types, and fakes. Implementation
@@ -35,8 +47,8 @@ crates depend on the `-api` crates, never on each other's internals.
 
 Deferred (added at their milestones — see DECISIONS.md): `chroma-capture-wayland`
 (M7) plus the logic crates `chroma-media-ffmpeg`, `chroma-modifiers`,
-`chroma-camera`, `chroma-compositor`, `chroma-render`, `chroma-project`,
-`chroma-app`, `chroma-tauri`, and the SvelteKit front end under `app/`.
+`chroma-camera`, `chroma-project`, `chroma-app`, `chroma-tauri`, and the
+SvelteKit front end under `app/`.
 
 ## Build
 

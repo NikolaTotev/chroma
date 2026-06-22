@@ -1,0 +1,11 @@
+[package]
+name = "chroma-compositor"
+description = "Chroma CPU reference compositor: background + camera-transformed scene inset + overlays. Implements chroma-core-api::Compositor; deterministic for golden-frame tests."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }

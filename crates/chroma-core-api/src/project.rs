@@ -24,6 +24,8 @@ pub struct Project {
     pub canvas: Size,
     /// The background layer the scene is composited over (spec BG-01/02).
     pub background: Background,
+    /// Styling of the recorded scene inset above the background (spec BG-03).
+    pub scene: SceneStyle,
     /// The modifier lanes, in lane order (index 0 = bottom lane). Evaluation
     /// order within a stage is by this index (spec §3.4).
     pub modifiers: Vec<ModifierSpec>,
@@ -67,6 +69,68 @@ pub struct GradientStop {
     /// Position along the gradient in `[0.0, 1.0]`.
     pub offset: f32,
     /// Linear-RGBA color at this stop.
+    pub rgba: [f32; 4],
+}
+
+/// Styling of the recorded scene inset above the background (spec BG-03).
+///
+/// All lengths are normalized to the canvas: `1.0` spans the full shorter
+/// canvas edge, keeping the look resolution-independent (spec EXP-06).
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct SceneStyle {
+    /// Inset margin between the canvas edge and the scene, as a fraction of the
+    /// canvas in `[0.0, 0.5)`.
+    pub padding: f32,
+    /// Corner radius of the scene inset, as a fraction of its shorter edge in
+    /// `[0.0, 0.5]`.
+    pub corner_radius: f32,
+    /// Optional drop shadow behind the inset.
+    pub shadow: Option<Shadow>,
+    /// Optional border stroked around the inset.
+    pub border: Option<Border>,
+}
+
+impl Default for SceneStyle {
+    fn default() -> Self {
+        SceneStyle {
+            padding: 0.06,
+            corner_radius: 0.04,
+            shadow: Some(Shadow::default()),
+            border: None,
+        }
+    }
+}
+
+/// A drop shadow behind the scene inset.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Shadow {
+    /// Horizontal offset as a fraction of the canvas.
+    pub dx: f32,
+    /// Vertical offset as a fraction of the canvas.
+    pub dy: f32,
+    /// Blur radius as a fraction of the canvas.
+    pub blur: f32,
+    /// Shadow color (linear RGBA); alpha sets its strength.
+    pub rgba: [f32; 4],
+}
+
+impl Default for Shadow {
+    fn default() -> Self {
+        Shadow {
+            dx: 0.0,
+            dy: 0.012,
+            blur: 0.03,
+            rgba: [0.0, 0.0, 0.0, 0.45],
+        }
+    }
+}
+
+/// A border stroked around the scene inset.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Border {
+    /// Stroke width as a fraction of the canvas.
+    pub width: f32,
+    /// Border color (linear RGBA).
     pub rgba: [f32; 4],
 }
 

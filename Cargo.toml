@@ -13,6 +13,8 @@ members = [
     "crates/chroma-capture-api",
     "crates/chroma-media-api",
     "crates/chroma-capture-x11",
+    "crates/chroma-compositor",
+    "crates/chroma-render",
 ]
 
 [workspace.package]

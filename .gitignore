@@ -27,3 +27,6 @@ Thumbs.db
 # Local scratch
 /scratch
 *.local
+
+# Demo/example render output
+*.bmp

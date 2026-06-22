@@ -20,7 +20,7 @@ impl Point {
 }
 
 /// An integer pixel size (canvas, source, or frame dimensions).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Size {
     pub width: u32,
     pub height: u32,

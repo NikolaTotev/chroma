@@ -26,6 +26,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "chroma-compositor"
+version = "0.1.0"
+dependencies = [
+ "chroma-core-api",
+]
+
+[[package]]
 name = "chroma-core-api"
 version = "0.1.0"
 dependencies = [
@@ -39,6 +46,15 @@ version = "0.1.0"
 dependencies = [
  "chroma-core-api",
  "serde",
+]
+
+[[package]]
+name = "chroma-render"
+version = "0.1.0"
+dependencies = [
+ "chroma-compositor",
+ "chroma-core-api",
+ "chroma-media-api",
 ]
 
 [[package]]

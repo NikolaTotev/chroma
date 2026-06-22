@@ -1,0 +1,15 @@
+[package]
+name = "chroma-render"
+description = "Chroma deterministic render core: wires the §3.4 pipeline (source sample → camera solve → scene composite → overlay) into one composited frame."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+chroma-core-api = { workspace = true }
+chroma-media-api = { workspace = true }
+
+[dev-dependencies]
+chroma-compositor = { path = "../chroma-compositor" }
